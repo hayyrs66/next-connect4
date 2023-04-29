@@ -1,0 +1,5 @@
+.bg {
+  border-radius: 0px;
+  background: linear-gradient(225deg, #dedede, #ffffff);
+  box-shadow: -9px 9px 17px #ebebeb, 9px -9px 17px #ffffff;
+}
