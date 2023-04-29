@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { GameStats } from "../components/GameStats";
 import fetchData from "@/service/client";
 import updateData from "@/service/updateDb";
+import GameModal from "../components/GameModal";
 
 const ColsRender = ({ col, handleClick, winningCells }) => {
   return (
@@ -55,6 +56,7 @@ const GameRender = ({
   const [isEmpate, setIsEmpate] = useState(false);
   const [playerTurns, setPlayerTurns] = useState({ [PieceX]: 0, [PieceO]: 0 });
   const [winningCells, setWinningCells] = useState([]);
+  const [showModal, setShowModal] = useState(false);
 
   const gameOver = (currentPlayer) => {
     // checking for horizontal winner
@@ -69,12 +71,6 @@ const GameRender = ({
         ) {
           setWinner(piece);
           setIsGameOver(true);
-          setWinningCells([
-            { col: col, row: row },
-            { col: col + 1, row: row },
-            { col: col + 2, row: row },
-            { col: col + 3, row: row },
-          ]);
           return true;
         }
       }
@@ -92,12 +88,6 @@ const GameRender = ({
         ) {
           setWinner(piece);
           setIsGameOver(true);
-          setWinningCells([
-            { col: col, row: row },
-            { col: col + 1, row: row },
-            { col: col + 2, row: row },
-            { col: col + 3, row: row },
-          ]);
           return true;
         }
       }
@@ -115,12 +105,6 @@ const GameRender = ({
         ) {
           setWinner(piece);
           setIsGameOver(true);
-          updateWinningCells([
-            { col: col, row: row },
-            { col: col + 1, row: row },
-            { col: col + 2, row: row },
-            { col: col + 3, row: row },
-          ]);
           return true;
         }
       }
@@ -138,12 +122,6 @@ const GameRender = ({
         ) {
           setWinner(piece);
           setIsGameOver(true);
-          setWinningCells([
-            { col: col, row: row },
-            { col: col + 1, row: row },
-            { col: col + 2, row: row },
-            { col: col + 3, row: row },
-          ]);
           return true;
         }
       }
@@ -192,11 +170,12 @@ const GameRender = ({
 
     playerTurns[player]++;
 
-    if (gameOver(player)) {
+    if (gameOver()) {
       setWinner(player);
     } else if (isBoardFull()) {
       setIsEmpate(true);
-    } else if (!skipToggle) {
+      setIsGameOver
+      console.log(isEmpate)
       setCurrentPlayer(player === PieceX ? PieceO : PieceX);
     }
   };
@@ -216,7 +195,10 @@ const GameRender = ({
     if (!winner && !isEmpate && isAgainstComputer) {
       if (!gameOver(currentPlayer)) {
         setCurrentPlayer(PieceO);
-        computerMove();
+        setTimeout(() => {
+          computerMove();
+        }, 500);
+
       }
     } else {
       setCurrentPlayer(currentPlayer === PieceX ? PieceO : PieceX);
@@ -240,74 +222,46 @@ const GameRender = ({
   const sendWinner = getWinnerName();
   const turnosGanador = winner ? playerTurns[winner] : null;
 
+  useEffect(() => {
+    if (winner || isEmpate) {
+      setShowModal(true);
+    }
+  }, [winner, isEmpate]);
+
+  const closeModal = () => {
+    setShowModal(false);
+  };
+
   if (winner) {
     updateData(partidaId, sendWinner, elapsedTime, turnosGanador);
 
     return (
-      <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black bg-opacity-40">
-        <div className="relative bg-white rounded-lg shadow-xl w-full max-w-md">
-          <div className="p-6">
-            <h2 className="text-2xl font-semibold text-gray-800 mb-4">
-              Resultado de la partida
-            </h2>
-            <p className="text-gray-600">
-              Ganador:{" "}
-              <span className="text-indigo-500 font-semibold">
-                {sendWinner}
-              </span>
-            </p>
-            <p className="text-gray-600">
-              Turnos del ganador:{" "}
-              <span className="text-indigo-500 font-semibold">
-                {turnosGanador}
-              </span>
-            </p>
-            <p className="text-gray-600 mt-2">
-              Duración de la partida:{" "}
-              <span className="font-semibold">{elapsedTime}</span>
-            </p>
-            <div className="mt-6 flex space-x-4">
-              <button className="px-2 py-2 font-medium text-white bg-indigo-600 hover:bg-indigo-700 border transition-all border-transparent rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500">
-                Volver a jugar
-              </button>
-              <button className="px-2 font-medium text-white bg-gray-700 hover:bg-gray-600 transition-all border border-transparent rounded-md shadow-sm focus:ring-green-500 focus:border-green-500">
-                Página principal
-              </button>
-            </div>
-          </div>
+      <>
+        <div className="grid grid-cols-7 gap-1">
+          {Object.entries(cols).map(([k, col], index) => {
+            return (
+              <ColsRender
+                col={col}
+                key={index}
+                handleClick={() => {
+                  handleClick(index);
+                }}
+                winningCells={winningCells}
+              />
+            );
+          })}
         </div>
-      </div>
+        {showModal && (
+          <GameModal
+            sendWinner={sendWinner}
+            turnosGanador={turnosGanador}
+            elapsedTime={elapsedTime}
+            closeModal={closeModal}
+          />
+        )}
+      </>
     );
-  } else if (isEmpate) {
-    setIsGameOver(true);
-    updateData(partidaId, "empate", elapsedTime);
 
-    return (
-      <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black bg-opacity-40">
-        <div className="relative bg-white rounded-lg shadow-xl w-full max-w-md">
-          <div className="p-6">
-            <h2 className="text-2xl font-semibold text-gray-800 mb-4">
-              Resultado de la partida
-            </h2>
-            <p className="text-gray-600">
-              <span className="font-semibold">El juego es un empate!</span>
-            </p>
-            <p className="text-gray-600 mt-2">
-              Duración de la partida:{" "}
-              <span className="font-semibold">{elapsedTime}</span>
-            </p>
-            <div className="mt-6 flex space-x-4">
-              <button className="px-2 py-2 font-medium text-white bg-indigo-600 hover:bg-indigo-700 border transition-all border-transparent rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500">
-                Volver a jugar
-              </button>
-              <button className="px-2 font-medium text-white bg-gray-700 hover:bg-gray-600 transition-all border border-transparent rounded-md shadow-sm focus:ring-green-500 focus:border-green-500">
-                Página principal
-              </button>
-            </div>
-          </div>
-        </div>
-      </div>
-    );
   } else {
     return (
       <div className="grid grid-cols-7 gap-1">
