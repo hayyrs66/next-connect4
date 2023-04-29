@@ -1,0 +1,44 @@
+digraph {
+  rankdir="TB";
+  node[shape="box", fontname="Arial"];
+  edge[fontname="Arial"];
+
+  start [label="Inicio", shape="ellipse"];
+
+  subgraph cluster_Juego {
+    label = "Juego";
+    handle_click [label="handleClick()"];
+    player_move [label="playerMove()"];
+    fill_field [label="fillField()"];
+    computer_move [label="computerMove()"];
+    game_over [label="gameOver()"];
+    is_board_full [label="isBoardFull()"];
+  }
+
+  subgraph cluster_Render {
+    label = "Render";
+    cols_render [label="ColsRender"];
+    game_render [label="GameRender"];
+    game_stats [label="GameStats"];
+  }
+
+  update_data [label="updateData()"];
+
+  winner [label="Ganador"];
+  tie [label="Empate"];
+
+  start -> game_render [label="Renderizar juego"];
+  game_render -> cols_render [label="Renderizar columnas"];
+  game_render -> game_stats [label="Renderizar estadísticas del juego"];
+  cols_render -> handle_click [label="Capturar clic del jugador"];
+  handle_click -> player_move [label="Mover jugador"];
+  player_move -> fill_field [label="Llenar campo de juego"];
+  fill_field -> game_over [label="Verificar si hay ganador"];
+  game_over -> winner [label="Hay ganador"];
+  game_over -> tie [label="Es empate"];
+  winner -> update_data [label="Actualizar base de datos"];
+  tie -> update_data [label="Actualizar base de datos"];
+  computer_move -> fill_field [label="Mover computadora"];
+  fill_field -> computer_move [label="Mover computadora"];
+}
+
